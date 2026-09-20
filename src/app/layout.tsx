@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { HeaderNav } from "@/components/header-nav";
-import { createClient } from "@/lib/supabase/server";
+import { hasSessionCookie } from "@/lib/supabase/session-hint";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,15 +11,16 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
+  // Reading the cookie jar keeps the shared header off the network; pages that
+  // actually gate on identity still verify it with `requireUser`.
+  const authenticated = hasSessionCookie((await cookies()).getAll());
   return (
     <html lang="es-AR">
       <body className="min-h-screen antialiased">
         <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-5 sm:px-8">
           <header className="flex min-h-20 items-center justify-between gap-4 border-b border-border">
             <Link href="/" className="text-2xl font-black tracking-tight" aria-label="Copita, inicio">copita<span className="text-primary">.</span></Link>
-            <HeaderNav initialAuthenticated={Boolean(data?.claims?.sub)} />
+            <HeaderNav authenticated={authenticated} />
           </header>
           <main className="flex-1">{children}</main>
           <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-7 text-sm text-muted">

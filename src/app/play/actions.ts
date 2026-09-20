@@ -6,10 +6,10 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { generateBracket } from "@/lib/bracket/generateBracket";
-import { isAllowedBracketSize } from "@/lib/bracket/sizes";
+import { isAllowedParticipantCount } from "@/lib/bracket/sizes";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { loadRun, runCookieName, tokenHash } from "@/lib/runs";
+import { authorizeRun, runCookieName, tokenHash } from "@/lib/runs";
 
 export async function startRun(cupId: string) {
   if (!z.uuid().safeParse(cupId).success) redirect("/");
@@ -19,7 +19,7 @@ export async function startRun(cupId: string) {
   if (!cup || cup.status !== "published") redirect("/");
   if (!process.env.SUPABASE_SECRET_KEY) redirect(`/cup/${cup.slug}?error=start`);
   const { data: entries, error } = await supabase.from("cup_entries").select("id").eq("cup_id", cupId);
-  if (error || !entries || !isAllowedBracketSize(entries.length) || entries.length !== cup.participant_count) {
+  if (error || !entries || !isAllowedParticipantCount(entries.length) || entries.length !== cup.participant_count) {
     redirect(`/cup/${cup.slug}?error=participants`);
   }
 
@@ -64,9 +64,9 @@ export async function startRun(cupId: string) {
 
 export async function selectWinner(runId: string, matchId: string, winnerEntryId: string) {
   if (![runId, matchId, winnerEntryId].every((value) => z.uuid().safeParse(value).success)) redirect("/");
-  const loaded = await loadRun(runId);
-  if (!loaded) redirect("/");
-  if (loaded.run.status !== "active") redirect(`/result/${runId}`);
+  const run = await authorizeRun(runId);
+  if (!run) redirect("/");
+  if (run.status !== "active") redirect(`/result/${runId}`);
   const admin = createAdminClient();
   const { data: completed, error } = await admin.rpc("choose_bracket_winner", {
     p_run_id: runId,

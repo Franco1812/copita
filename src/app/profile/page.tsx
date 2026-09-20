@@ -12,7 +12,7 @@ export default async function Profile({ searchParams }: { searchParams: Promise<
       {onboarding === "1" && <input type="hidden" name="onboarding" value="1" />}
       <div><label htmlFor="display_name" className="mb-2 block font-bold">Tu nombre</label><input id="display_name" name="display_name" defaultValue={profile?.display_name ?? ""} autoComplete="name" required maxLength={80} className="min-h-12 w-full rounded-xl border border-border px-4" /></div>
       <div><label htmlFor="avatar" className="mb-2 block font-bold">Foto de perfil <span className="font-normal text-muted">(opcional)</span></label>
-        {profile?.avatar_url && <Image src={profile.avatar_url} alt="Tu foto de perfil actual" width={96} height={96} unoptimized className="mb-3 aspect-square h-24 w-24 rounded-full object-cover" />}
+        {profile?.avatar_url && <Image src={profile.avatar_url} alt="Tu foto de perfil actual" width={96} height={96} className="mb-3 aspect-square h-24 w-24 rounded-full object-cover" />}
         <input id="avatar" name="avatar" type="file" accept="image/jpeg,image/png,image/webp" className="w-full rounded-xl border border-border bg-white p-3" />
         <p className="mt-2 text-sm text-muted">JPG, PNG o WebP · máximo 5 MB. Podés cambiarla después.</p>
       </div>

@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { ALLOWED_BRACKET_SIZES, isAllowedBracketSize } from "./bracket/sizes";
+import { MAX_PARTICIPANTS, MIN_PARTICIPANTS, SUGGESTED_PARTICIPANT_COUNTS } from "./bracket/sizes";
 
-export { ALLOWED_BRACKET_SIZES };
+export { MAX_PARTICIPANTS, MIN_PARTICIPANTS, SUGGESTED_PARTICIPANT_COUNTS };
 
 export const cupSchema = z.object({
   title: z.string().trim().min(1).max(120),
   description: z.string().trim().max(2000),
-  participant_count: z.coerce.number().int().refine(isAllowedBracketSize),
+  participant_count: z.coerce.number().int().min(MIN_PARTICIPANTS).max(MAX_PARTICIPANTS),
 });
 
 export const entrySchema = z.object({

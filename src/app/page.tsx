@@ -54,7 +54,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
           : cups?.length ? <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {cups.map((cup) => <article key={cup.id} className="group overflow-hidden rounded-2xl border border-border bg-surface transition hover:border-primary hover:shadow-lg">
               <Link href={`/cup/${cup.slug}`} className="flex h-full flex-col focus-visible:outline-offset-[-3px]" aria-label={`Ver Copa ${cup.title}`}>
-                {cup.cover_url ? <Image src={cup.cover_url} alt="" width={600} height={400} unoptimized className="aspect-[3/2] w-full object-cover" /> : <div className="flex aspect-[3/2] items-center justify-center bg-[#dcebe0] text-6xl font-black text-primary">VS</div>}
+                {cup.cover_url ? <Image src={cup.cover_url} alt="" width={600} height={400} sizes="(min-width: 1024px) 400px, (min-width: 640px) 45vw, 100vw" className="aspect-[3/2] w-full object-cover" /> : <div className="flex aspect-[3/2] items-center justify-center bg-[#dcebe0] text-6xl font-black text-primary">VS</div>}
                 <div className="flex flex-1 flex-col p-5">
                   <p className="text-xs font-black uppercase tracking-widest text-primary">{cup.participant_count} participantes</p>
                   <h3 className="mt-2 text-xl font-black group-hover:text-primary">{cup.title}</h3>
@@ -78,7 +78,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
         <h2 className="text-3xl font-black tracking-tight sm:text-4xl">Así de simple</h2>
         <div className="mt-9 grid gap-5 md:grid-cols-3">
           {[
-            { icon: UsersRound, title: "Armá tu Copa", text: "Elegí 4, 8, 16, 32 o 64 participantes." },
+            { icon: UsersRound, title: "Armá tu Copa", text: "Desde 4 y hasta 150 participantes." },
             { icon: Shuffle, title: "Jugá cruces únicos", text: "Cada partida genera enfrentamientos aleatorios." },
             { icon: Trophy, title: "Compartí al campeón", text: "Tomá cada decisión y compartí tu resultado." },
           ].map(({ icon: Icon, title, text }) => <div key={title} className="rounded-2xl border border-border bg-surface p-6"><Icon className="text-primary" aria-hidden="true" /><h3 className="mt-5 text-xl font-bold">{title}</h3><p className="mt-2 text-muted">{text}</p></div>)}

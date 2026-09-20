@@ -48,9 +48,11 @@ export async function signIn(formData: FormData) {
   const parsed = credentials.safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect(messageUrl("/login", "Ingresá un email y contraseña válidos."));
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) redirect(messageUrl("/login", "No pudimos iniciar sesión. Revisá tus credenciales o confirmá tu correo."));
-  if (data.user) await syncDisplayName(supabase, data.user);
+  // The signup trigger copies the name into the profile, so signing in stays a
+  // single round trip; accounts created before that still get the onboarding
+  // prompt from the dashboard.
   redirect("/dashboard");
 }
 

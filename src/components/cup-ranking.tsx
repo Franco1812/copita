@@ -44,7 +44,7 @@ export function CupRanking({ entries, completedRuns }: { entries: RankingEntry[]
           const winRate = percent(entry.matchWins, entry.matchAppearances);
           return <li key={entry.id} className="grid gap-4 rounded-2xl border border-border bg-surface p-4 sm:grid-cols-[auto_6rem_minmax(0,1fr)] sm:items-center">
             <span className="text-center text-xl font-black text-muted">{(page - 1) * pageSize + index + 1}</span>
-            {entry.imageUrl ? <Image src={entry.imageUrl} alt="" width={96} height={96} unoptimized className="aspect-square w-24 rounded-xl bg-[#151515] object-contain" /> : <div className="flex aspect-square w-24 items-center justify-center rounded-xl bg-[#dcebe0] text-2xl font-black text-primary">VS</div>}
+            {entry.imageUrl ? <Image src={entry.imageUrl} alt="" width={96} height={96} className="aspect-square w-24 rounded-xl bg-[#151515] object-contain" /> : <div className="flex aspect-square w-24 items-center justify-center rounded-xl bg-[#dcebe0] text-2xl font-black text-primary">VS</div>}
             <div className="min-w-0">
               <h3 className="truncate text-lg font-black">{entry.name}</h3>
               <div className="mt-3 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[8rem_minmax(0,1fr)_3.5rem] sm:items-center">

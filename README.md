@@ -53,6 +53,14 @@ Una Copa publicada se juega desde `/cup/[slug]`. Cada clic en **JUGAR COPA** cre
 
 Ejecutá una sola vez `supabase/migrations/20260918040000_cup_rankings.sql` en el SQL Editor para activar el ranking público de cada Copa. Solo cuenta partidas completadas: **Títulos** es la proporción de Copas ganadas y **Victorias** la proporción de enfrentamientos ganados entre los disputados. Las partidas en curso no alteran las estadísticas.
 
+## Copas grandes (hasta 150 participantes)
+
+Ejecutá una sola vez `supabase/migrations/20260920000000_large_cups.sql` en el SQL Editor. La migración habilita cualquier tamaño entre 4 y 150 participantes, reemplaza la validación del bracket por una genérica y copia el nombre del registro al perfil para que iniciar sesión sea un solo viaje al servidor.
+
+Cuando el total no es potencia de dos, la Copa abre con una **ronda preliminar** corta y los participantes sobrantes entran directo a la segunda ronda. Por ejemplo, 150 participantes juegan 22 cruces preliminares, 106 pasan directo y el campeón sale después de 149 decisiones.
+
+En el editor de una Copa, **Pegar una lista** carga muchos participantes de una vez (un nombre por línea) y después se puede editar cada uno para sumarle imagen, descripción y enlace.
+
 ## Verificaciones
 
 - `npm run lint`

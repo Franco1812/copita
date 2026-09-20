@@ -84,6 +84,31 @@ export async function addEntry(id: string, formData: FormData) {
   redirect(`/create/${id}#participantes`);
 }
 
+export async function addEntries(id: string, formData: FormData) {
+  const { supabase, cup } = await ownCup(id);
+  const names = String(formData.get("names") ?? "")
+    .split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (!names.length) redirect(errorUrl(id, "Pegá al menos un nombre, uno por línea."));
+
+  const { count } = await supabase.from("cup_entries").select("id", { count: "exact", head: true }).eq("cup_id", id);
+  const free = cup.participant_count - (count ?? 0);
+  if (free <= 0) redirect(errorUrl(id, "Ya cargaste todos los participantes."));
+
+  const accepted = names.slice(0, free);
+  const parsed = accepted.map((name) => entrySchema.safeParse({ name, description: "", external_url: "" }));
+  if (parsed.some((entry) => !entry.success)) {
+    redirect(errorUrl(id, "Cada nombre debe tener entre 1 y 120 caracteres."));
+  }
+
+  const { error } = await supabase.from("cup_entries")
+    .insert(accepted.map((name) => ({ cup_id: id, name })));
+  if (error) redirect(errorUrl(id, "No pudimos agregar la lista de participantes."));
+  revalidatePath(`/create/${id}`);
+  redirect(errorUrl(id, accepted.length < names.length
+    ? `Agregamos ${accepted.length} participantes; los ${names.length - accepted.length} restantes no entraban.`
+    : `Agregamos ${accepted.length} participantes.`));
+}
+
 export async function updateEntry(id: string, entryId: string, formData: FormData) {
   const { supabase, userId } = await ownCup(id);
   if (!uuid.safeParse(entryId).success) redirect(errorUrl(id, "Participante inválido."));

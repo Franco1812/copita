@@ -15,6 +15,19 @@ export const entrySchema = z.object({
   external_url: z.union([z.url().refine((url) => /^https?:\/\//.test(url)), z.literal("")]),
 });
 
+export function participantNameKey(name: string) {
+  return name.normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLocaleLowerCase("es")
+    .replace(/\s+/gu, " ")
+    .trim();
+}
+
+export function hasDuplicateParticipantNames(names: readonly string[]) {
+  const keys = names.map(participantNameKey);
+  return new Set(keys).size !== keys.length;
+}
+
 export function makeSlug(title: string) {
   const base = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 65) || "copa";

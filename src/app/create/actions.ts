@@ -4,11 +4,22 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
-import { cupSchema, entrySchema, makeSlug } from "@/lib/cups";
+import {
+  cupSchema,
+  entrySchema,
+  hasDuplicateParticipantNames,
+  makeSlug,
+  participantNameKey,
+} from "@/lib/cups";
 import { uploadImage } from "@/lib/uploads";
 
 const uuid = z.uuid();
 const errorUrl = (id: string, message: string) => `/create/${id}?message=${encodeURIComponent(message)}`;
+const duplicateNameMessage = "Hay participantes repetidos. Los nombres deben ser únicos, incluso si solo cambia el uso de mayúsculas, espacios o acentos.";
+
+function isDuplicateNameError(error: { code?: string } | null) {
+  return error?.code === "23505";
+}
 
 async function ownCup(id: string, draftOnly = true) {
   if (!uuid.safeParse(id).success) redirect("/dashboard");
@@ -64,8 +75,12 @@ export async function addEntry(id: string, formData: FormData) {
   const { supabase, cup, userId } = await ownCup(id);
   const parsed = entrySchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect(errorUrl(id, "Revisá el nombre y el enlace del participante."));
-  const { count } = await supabase.from("cup_entries").select("id", { count: "exact", head: true }).eq("cup_id", id);
+  const { data: entries, count } = await supabase.from("cup_entries")
+    .select("name", { count: "exact" }).eq("cup_id", id);
   if ((count ?? 0) >= cup.participant_count) redirect(errorUrl(id, "Ya cargaste todos los participantes."));
+  if (entries?.some((entry) => participantNameKey(entry.name) === participantNameKey(parsed.data.name))) {
+    redirect(errorUrl(id, duplicateNameMessage));
+  }
   let imageUrl: string | null = null;
   try {
     imageUrl = await uploadImage(formData.get("image"), userId);
@@ -79,7 +94,7 @@ export async function addEntry(id: string, formData: FormData) {
     external_url: parsed.data.external_url || null,
     image_url: imageUrl,
   });
-  if (error) redirect(errorUrl(id, "No pudimos agregar el participante."));
+  if (error) redirect(errorUrl(id, isDuplicateNameError(error) ? duplicateNameMessage : "No pudimos agregar el participante."));
   revalidatePath(`/create/${id}`);
   redirect(`/create/${id}#participantes`);
 }
@@ -89,8 +104,10 @@ export async function addEntries(id: string, formData: FormData) {
   const names = String(formData.get("names") ?? "")
     .split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   if (!names.length) redirect(errorUrl(id, "Pegá al menos un nombre, uno por línea."));
+  if (hasDuplicateParticipantNames(names)) redirect(errorUrl(id, duplicateNameMessage));
 
-  const { count } = await supabase.from("cup_entries").select("id", { count: "exact", head: true }).eq("cup_id", id);
+  const { data: entries, count } = await supabase.from("cup_entries")
+    .select("name", { count: "exact" }).eq("cup_id", id);
   const free = cup.participant_count - (count ?? 0);
   if (free <= 0) redirect(errorUrl(id, "Ya cargaste todos los participantes."));
 
@@ -99,10 +116,14 @@ export async function addEntries(id: string, formData: FormData) {
   if (parsed.some((entry) => !entry.success)) {
     redirect(errorUrl(id, "Cada nombre debe tener entre 1 y 120 caracteres."));
   }
+  const existingKeys = new Set(entries?.map((entry) => participantNameKey(entry.name)) ?? []);
+  if (accepted.some((name) => existingKeys.has(participantNameKey(name)))) {
+    redirect(errorUrl(id, duplicateNameMessage));
+  }
 
   const { error } = await supabase.from("cup_entries")
     .insert(accepted.map((name) => ({ cup_id: id, name })));
-  if (error) redirect(errorUrl(id, "No pudimos agregar la lista de participantes."));
+  if (error) redirect(errorUrl(id, isDuplicateNameError(error) ? duplicateNameMessage : "No pudimos agregar la lista de participantes."));
   revalidatePath(`/create/${id}`);
   redirect(errorUrl(id, accepted.length < names.length
     ? `Agregamos ${accepted.length} participantes; los ${names.length - accepted.length} restantes no entraban.`
@@ -116,6 +137,11 @@ export async function updateEntry(id: string, entryId: string, formData: FormDat
   if (!parsed.success) redirect(errorUrl(id, "Revisá el nombre y el enlace del participante."));
   const { data: existing } = await supabase.from("cup_entries").select("id").eq("id", entryId).eq("cup_id", id).single();
   if (!existing) redirect(errorUrl(id, "Participante inexistente."));
+  const { data: otherEntries } = await supabase.from("cup_entries")
+    .select("name").eq("cup_id", id).neq("id", entryId);
+  if (otherEntries?.some((entry) => participantNameKey(entry.name) === participantNameKey(parsed.data.name))) {
+    redirect(errorUrl(id, duplicateNameMessage));
+  }
   let imageUrl: string | null = null;
   try {
     imageUrl = await uploadImage(formData.get("image"), userId);
@@ -128,7 +154,7 @@ export async function updateEntry(id: string, entryId: string, formData: FormDat
     external_url: parsed.data.external_url || null,
     ...(imageUrl ? { image_url: imageUrl } : {}),
   }).eq("id", entryId).eq("cup_id", id);
-  if (error) redirect(errorUrl(id, "No pudimos guardar el participante."));
+  if (error) redirect(errorUrl(id, isDuplicateNameError(error) ? duplicateNameMessage : "No pudimos guardar el participante."));
   revalidatePath(`/create/${id}`);
   redirect(errorUrl(id, "Participante guardado."));
 }
@@ -144,8 +170,12 @@ export async function deleteEntry(id: string, entryId: string) {
 
 export async function publishCup(id: string) {
   const { supabase, cup } = await ownCup(id);
-  const { count } = await supabase.from("cup_entries").select("id", { count: "exact", head: true }).eq("cup_id", id);
+  const { data: entries, count } = await supabase.from("cup_entries")
+    .select("name", { count: "exact" }).eq("cup_id", id);
   if (count !== cup.participant_count) redirect(errorUrl(id, `Faltan ${(cup.participant_count - (count ?? 0))} participantes.`));
+  if (entries && hasDuplicateParticipantNames(entries.map((entry) => entry.name))) {
+    redirect(errorUrl(id, duplicateNameMessage));
+  }
   const { error } = await supabase.from("cups").update({ status: "published" }).eq("id", id).eq("status", "draft");
   if (error) redirect(errorUrl(id, "No pudimos publicar la Copa."));
   revalidatePath("/dashboard");

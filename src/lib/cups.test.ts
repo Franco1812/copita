@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { MAX_PARTICIPANTS, MIN_PARTICIPANTS, cupSchema, entrySchema, makeSlug } from "./cups";
+import {
+  MAX_PARTICIPANTS,
+  MIN_PARTICIPANTS,
+  cupSchema,
+  entrySchema,
+  hasDuplicateParticipantNames,
+  makeSlug,
+  participantNameKey,
+} from "./cups";
 
 describe("Cup validation", () => {
   it.each([4, 5, 8, 17, 64, 100, 128, 149, 150])("accepts a cup of %i participants", (size) => {
@@ -25,6 +33,15 @@ describe("Cup validation", () => {
 
   it("rejects non-HTTP external links", () => {
     expect(entrySchema.safeParse({ name: "Entrada", description: "", external_url: "javascript:alert(1)" }).success).toBe(false);
+  });
+
+  it("normalizes participant names across case, accents, and whitespace", () => {
+    expect(participantNameKey("  José   PÉREZ ")).toBe("jose perez");
+  });
+
+  it("detects equivalent participant names", () => {
+    expect(hasDuplicateParticipantNames(["José Pérez", "  JOSE   PEREZ "])).toBe(true);
+    expect(hasDuplicateParticipantNames(["José Pérez", "Juan Pérez"])).toBe(false);
   });
 
   it("creates an URL-safe slug with a unique suffix", () => {

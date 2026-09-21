@@ -3,7 +3,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { generateBracket } from "@/lib/bracket/generateBracket";
 import { isAllowedParticipantCount } from "@/lib/bracket/sizes";
@@ -63,17 +62,16 @@ export async function startRun(cupId: string) {
 }
 
 export async function selectWinner(runId: string, matchId: string, winnerEntryId: string) {
-  if (![runId, matchId, winnerEntryId].every((value) => z.uuid().safeParse(value).success)) redirect("/");
+  const failure = { success: false as const, completed: false };
+  if (![runId, matchId, winnerEntryId].every((value) => z.uuid().safeParse(value).success)) return failure;
   const run = await authorizeRun(runId);
-  if (!run) redirect("/");
-  if (run.status !== "active") redirect(`/result/${runId}`);
+  if (!run || run.status !== "active") return failure;
   const admin = createAdminClient();
   const { data: completed, error } = await admin.rpc("choose_bracket_winner", {
     p_run_id: runId,
     p_match_id: matchId,
     p_winner_entry_id: winnerEntryId,
   });
-  if (error) redirect(`/play/${runId}?error=choice`);
-  revalidatePath(`/play/${runId}`);
-  redirect(completed ? `/result/${runId}` : `/play/${runId}`);
+  if (error) return failure;
+  return { success: true as const, completed: Boolean(completed) };
 }

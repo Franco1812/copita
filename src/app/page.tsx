@@ -20,7 +20,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
 
   return (
     <>
-      <section className="grid min-h-[610px] items-center gap-12 py-20 lg:grid-cols-[1.1fr_0.9fr] lg:py-28">
+      <section className="home-hero grid min-h-[610px] items-center gap-12 py-16 sm:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:py-24">
         <div>
           <p className="mb-5 inline-flex rounded-full border border-border bg-surface px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">Tus favoritos, frente a frente</p>
           <h1 className="max-w-3xl text-5xl font-black leading-[1.06] tracking-tight sm:text-6xl lg:text-7xl">¿Cuál es realmente tu <span className="text-primary">favorito?</span></h1>
@@ -30,14 +30,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
             <a href="#como-funciona" className="inline-flex min-h-12 items-center rounded-full border border-border bg-surface px-6 font-bold transition hover:border-primary">Cómo funciona</a>
           </div>
         </div>
-        <div className="relative mx-auto w-full max-w-lg rounded-[2rem] border border-border bg-surface p-5 shadow-[0_25px_70px_-35px_rgba(18,55,42,0.28)] sm:p-7" aria-label="Vista previa de un enfrentamiento">
+        <div className="hero-preview relative mx-auto w-full max-w-lg rounded-[2rem] border border-border bg-surface p-5 sm:p-7" aria-label="Vista previa animada de un enfrentamiento">
           <div className="mb-5 flex items-center justify-between text-sm font-bold text-muted"><span>RONDA 1 · 1 DE 8</span><Trophy size={20} className="text-primary" aria-hidden="true" /></div>
           <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-            <div className="flex min-h-44 items-end rounded-2xl bg-[#d7e8db] p-5"><span className="text-2xl font-black">Tu favorito A</span></div>
-            <span className="text-center text-xs font-black tracking-widest text-muted">VS</span>
-            <div className="flex min-h-44 items-end rounded-2xl bg-[#e9dcbf] p-5"><span className="text-2xl font-black">Tu favorito B</span></div>
+            <div className="hero-competitor hero-competitor-a flex min-h-44 items-end rounded-2xl p-5"><span className="relative z-10 text-2xl font-black">Tu favorito A</span></div>
+            <span className="hero-versus text-center text-xs font-black tracking-widest">VS</span>
+            <div className="hero-competitor hero-competitor-b flex min-h-44 items-end rounded-2xl p-5"><span className="relative z-10 text-2xl font-black">Tu favorito B</span></div>
           </div>
-          <div className="mt-5 h-2 overflow-hidden rounded-full bg-[#e6ebe4]"><div className="h-full w-1/3 rounded-full bg-primary" /></div>
+          <div className="hero-progress mt-5 h-2 overflow-hidden rounded-full bg-[#e6ebe4]"><div className="h-full w-1/3 rounded-full bg-primary" /></div>
           <p className="mt-3 text-center text-sm text-muted">Elegí, avanzá y coroná a tu campeón.</p>
         </div>
       </section>
@@ -52,7 +52,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
         </div>
         {error ? <p role="alert" className="mt-8 rounded-2xl border border-border bg-surface p-6 text-muted">No pudimos cargar las Copas. Intentá de nuevo más tarde.</p>
           : cups?.length ? <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {cups.map((cup) => <article key={cup.id} className="group overflow-hidden rounded-2xl border border-border bg-surface transition hover:border-primary hover:shadow-lg">
+            {cups.map((cup) => <article key={cup.id} className="interactive-card group overflow-hidden rounded-2xl border border-border bg-surface hover:border-primary">
               <Link href={`/cup/${cup.slug}`} className="flex h-full flex-col focus-visible:outline-offset-[-3px]" aria-label={`Ver Copa ${cup.title}`}>
                 {cup.cover_url ? <Image src={cup.cover_url} alt="" width={600} height={400} sizes="(min-width: 1024px) 400px, (min-width: 640px) 45vw, 100vw" className="aspect-[3/2] w-full object-cover" /> : <div className="flex aspect-[3/2] items-center justify-center bg-[#dcebe0] text-6xl font-black text-primary">VS</div>}
                 <div className="flex flex-1 flex-col p-5">
@@ -81,7 +81,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
             { icon: UsersRound, title: "Armá tu Copa", text: "Desde 4 y hasta 150 participantes." },
             { icon: Shuffle, title: "Jugá cruces únicos", text: "Cada partida genera enfrentamientos aleatorios." },
             { icon: Trophy, title: "Compartí al campeón", text: "Tomá cada decisión y compartí tu resultado." },
-          ].map(({ icon: Icon, title, text }) => <div key={title} className="rounded-2xl border border-border bg-surface p-6"><Icon className="text-primary" aria-hidden="true" /><h3 className="mt-5 text-xl font-bold">{title}</h3><p className="mt-2 text-muted">{text}</p></div>)}
+          ].map(({ icon: Icon, title, text }) => <div key={title} className="interactive-card rounded-2xl border border-border bg-surface p-6"><Icon className="text-primary" aria-hidden="true" /><h3 className="mt-5 text-xl font-bold">{title}</h3><p className="mt-2 text-muted">{text}</p></div>)}
         </div>
       </section>
       <section className="border-t border-border py-16 sm:py-20">

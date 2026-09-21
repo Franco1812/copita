@@ -15,10 +15,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // actually gate on identity still verify it with `requireUser`.
   const authenticated = hasSessionCookie((await cookies()).getAll());
   return (
-    <html lang="es-AR">
+    <html lang="es-AR" data-scroll-behavior="smooth">
       <body className="min-h-screen antialiased">
         <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-5 sm:px-8">
-          <header className="flex min-h-20 items-center justify-between gap-4 border-b border-border">
+          <header className="site-header flex min-h-20 items-center justify-between gap-4 border-b border-border">
             <Link href="/" className="text-2xl font-black tracking-tight" aria-label="Copita, inicio">copita<span className="text-primary">.</span></Link>
             <HeaderNav authenticated={authenticated} />
           </header>

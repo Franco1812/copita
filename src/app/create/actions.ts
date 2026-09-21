@@ -131,7 +131,8 @@ export async function addEntries(id: string, formData: FormData) {
 }
 
 export async function updateEntry(id: string, entryId: string, formData: FormData) {
-  const { supabase, userId } = await ownCup(id);
+  const { supabase, userId, cup } = await ownCup(id, false);
+  if (cup.status === "archived") redirect("/dashboard");
   if (!uuid.safeParse(entryId).success) redirect(errorUrl(id, "Participante inválido."));
   const parsed = entrySchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect(errorUrl(id, "Revisá el nombre y el enlace del participante."));
